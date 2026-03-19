@@ -32,8 +32,9 @@ pkg install x11-repo tur-repo -y
 pkg install git wget curl nano build-essential clang cmake ninja \
             sqlite libsqlite postgresql openblas libandroid-support \
             python python-pip termux-api android-tools code-server -y
-pkg install python-numpy python-pandas python-scipy -y
-pkg install libopenblas libandroid-support python-pillow -y
+pkg install python-numpy python-pandas python-scipy python-psutil python-pillow -y
+
+pkg install libopenblas libandroid-support -y
 
 echo -e "\e[1;33m[>] 시스템 기본 장비 장전 완료.\e[0m"
 
@@ -53,9 +54,19 @@ echo -e "\e[1;34m[>] 마소 공식 requirements.txt 및 허깅페이스 툴 설�
 pip install --upgrade pip
 
 echo -e "\e[1;34m[>] 나머지 가벼운 놈들만 PIP으로 마무리 (이미 있는 건 스킵됨)...\e[0m"
-pip install --upgrade pip
-pip install -r requirements.txt --prefer-binary
-pip install huggingface_hub[cli]  # 공식 다운로더
+
+echo -e "\e[1;31m[!] 마소의 러시안 인형(Nested Requirements)을 강제로 개봉합니다.\e[0m"
+find . -name "requirements*.txt" -exec sed -i '/torch/d' {} +
+find . -name "requirements*.txt" -exec sed -i '/hf-xet/d' {} +
+find . -name "requirements*.txt" -exec sed -i 's/[~=>]=*[0-9.]*//g' {} +
+
+python -m pip install -r requirements.txt --prefer-binary --no-deps numpy pandas psutil
+python -m pip install -r requirements.txt --prefer-binary
+
+# huggingface-cli 살리기
+python -m pip install huggingface_hub --prefer-binary
+# 수동으로 심볼릭 링크 연결 (안 깔릴 경우 대비)
+export PATH=$PATH:/data/data/com.termux/files/usr/bin
 
 # ==============================================================================
 # 3. 모델 다운로드 및 정식 셋팅 (Official setup_env.py)
