@@ -28,10 +28,11 @@ termux-wake-lock
 termux-setup-storage
 pkg update && pkg upgrade -y
 pkg install x11-repo tur-repo -y
+            
 pkg install git wget curl nano build-essential clang cmake ninja \
-            sqlite libsqlite-dev postgresql openblas libandroid-support \
+            sqlite libsqlite postgresql openblas libandroid-support \
             python python-pip termux-api android-tools code-server -y
-pkg install python-numpy python-pandas python-scipy python-matplotlib -y
+pkg install python-numpy python-pandas python-scipy -y
 pkg install libopenblas libandroid-support python-pillow -y
 
 echo -e "\e[1;33m[>] 시스템 기본 장비 장전 완료.\e[0m"
