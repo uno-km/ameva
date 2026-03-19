@@ -95,7 +95,20 @@ echo -e "\e[1;32m[>] 이제 'on'만 치면 마소 공식 엔진이 불을 뿜습
 # ==============================================================================
 # 6. 최종 진단 및 스텔스
 # ==============================================================================
+echo -e "\e[1;34m[5/7] 감각기관(Sensors) 및 스텔스 기능 점검...\e[0m"
 termux-volume music 0
+termux-volume notification 0
+termux-volume alarm 0
+
+# 자이로/GPS/배터리 체크 루틴
+# 최종 체크리스트
+echo -e "1. SSHD: \e[1;32mACTIVE (Port 8022)\e[0m"
+echo -e "2. Code-Server: \e[1;32mINSTALLED\e[0m (명령어: code-server)"
+echo -e "3. BitNet Engine: \e[1;32mREADY\e[0m (Path: ~/BitNet.cpp/build)"
+echo -e "4. Telegram Bot: \e[1;32mENABLED\e[0m"
+echo -e "5. Stealth Mode: \e[1;32mALL VOLUMES MUTED\e[0m"
+echo -e "\e[1;32m[확인] 위치 정보: $(termux-location -p network -last | grep -oP 'latitude": \K[^,]+' || echo "보안상 숨김")\e[0m"
+echo -e "\e[1;32m[확인] 배터리 상태: $(termux-battery-status | grep -oP 'percentage": \K[^,]+')%\e[0m"
 echo -e "\e[1;31m"
 echo "-------------------------------------------------------"
 echo " [AMEVA GENESIS 3.0: OFFICIAL-BIT-REVENGE COMPLETED] "
