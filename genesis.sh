@@ -39,34 +39,37 @@ pkg install libopenblas libandroid-support -y
 echo -e "\e[1;33m[>] 시스템 기본 장비 장전 완료.\e[0m"
 
 # ==============================================================================
-# 2. 마소 공식 BitNet.cpp 환경 구축 (Official Workflow)
+# 2. 마소 공식 BitNet 상륙 및 '강제 개조'
 # ==============================================================================
-echo -e "\e[1;31m[!] 마소 공식 레포 상륙 및 의존성 주입...\e[0m"
-mkdir -p ~/projects
-cd ~/projects
+mkdir -p ~/projects && cd ~/projects
 if [ ! -d "BitNet" ]; then
     git clone --recursive https://github.com/microsoft/BitNet.git
 fi
 cd BitNet
 
-# 마소 권장 의존성 설치
-echo -e "\e[1;34m[>] 마소 공식 requirements.txt 및 허깅페이스 툴 설치...\e[0m"
-pip install --upgrade pip
+echo -e "\e[1;31m[!] 마소의 식단표를 아메바 스타일로 완전히 재창조합니다.\e[0m"
 
-echo -e "\e[1;34m[>] 나머지 가벼운 놈들만 PIP으로 마무리 (이미 있는 건 스킵됨)...\e[0m"
+# [핵심 수술] 모든 리콰이어먼트 파일을 뒤져서 독극물(torch, hf-xet, 버전 제약)을 박멸합니다.
+# 이번엔 < 기호와 모든 버전 제약식을 싹 다 날려버립니다.
+find . -name "*.txt" -exec sed -i '/torch/d' {} +
+find . -name "*.txt" -exec sed -i '/hf-xet/d' {} +
+find . -name "*.txt" -exec sed -i 's/[<>=~]=*[0-9.]*//g' {} +
 
-echo -e "\e[1;31m[!] 마소의 러시안 인형(Nested Requirements)을 강제로 개봉합니다.\e[0m"
-find . -name "requirements*.txt" -exec sed -i '/torch/d' {} +
-find . -name "requirements*.txt" -exec sed -i '/hf-xet/d' {} +
-find . -name "requirements*.txt" -exec sed -i 's/[~=>]=*[0-9.]*//g' {} +
+# [추가 수술] huggingface_hub[cli] 가 아니라 그냥 huggingface_hub 만 설치하게 강제
+# hf-xet 이 자꾸 따라오는 걸 막기 위해 'huggingface-hub' 라이브러리만 명시
+echo "huggingface-hub" > ameva_requirements.txt
+echo "transformers" >> ameva_requirements.txt
+echo "sentencepiece" >> ameva_requirements.txt
+echo "gguf" >> ameva_requirements.txt
+echo "protobuf" >> ameva_requirements.txt
 
-python -m pip install -r requirements.txt --prefer-binary --no-deps numpy pandas psutil
-python -m pip install -r requirements.txt --prefer-binary
-
-# huggingface-cli 살리기
-python -m pip install huggingface_hub --prefer-binary
-# 수동으로 심볼릭 링크 연결 (안 깔릴 경우 대비)
-export PATH=$PATH:/data/data/com.termux/files/usr/bin
+# ==============================================================================
+# 3. 안전한 인스톨 (Safe Lane)
+# ==============================================================================
+echo -e "\e[1;34m[>] 금지된 PIP 업그레이드 무시하고 알맹이만 주입...\e[0m"
+# --no-deps 옵션으로 이미 pkg로 깔린 넘파이/psutil을 pip이 건드리지 못하게 차단
+python -m pip install --prefer-binary -r ameva_requirements.txt
+python -m pip install --prefer-binary huggingface_hub
 
 # ==============================================================================
 # 3. 모델 다운로드 및 정식 셋팅 (Official setup_env.py)
@@ -81,11 +84,17 @@ echo -e "\e[1;34m[>] 공식 setup_env.py 실행 (양자화 및 커널 최적화)
 python setup_env.py -md models/BitNet-b1.58-2B-4T -q i2_s
 
 # ==============================================================================
-# 4. AMEVA 전용 신경망 및 추가 도구 (Our DNA)
+# 4. 모델 징집 (huggingface-cli 대용량 다운로드)
 # ==============================================================================
-echo -e "\e[1;31m[!] 아메바의 독기(추가 라이브러리 & DB) 이식...\e[0m"
-pip install python-telegram-bot requests aiohttp psutil streamlit langfuse pydantic-ai \
-            pandas langchain numpy colorama sqlitedict sqlalchemy
+echo -e "\e[1;31m[!] 모델 징집... cli 안 깔렸으면 직접 URL로 땁니다.\e[0m"
+mkdir -p models/BitNet-b1.58-2B-4T
+# 만약 huggingface-cli가 실패했다면? 아메바식 직접 강탈
+if ! command -v huggingface-cli &> /dev/null; then
+    echo -e "\e[1;33m[!] CLI 실패 감지. 직접 다운로드로 우회합니다.\e[0m"
+    wget -c https://huggingface.co/microsoft/BitNet-b1.58-2B-4T-gguf/resolve/main/ggml-model-i2_s.gguf -P models/BitNet-b1.58-2B-4T/
+else
+    huggingface-cli download microsoft/BitNet-b1.58-2B-4T-gguf --local-dir models/BitNet-b1.58-2B-4T
+fi
 
 # DB 사령부 구축 (SQLite)
 mkdir -p ~/projects/ameva/db
