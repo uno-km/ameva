@@ -1,3 +1,5 @@
+curl -L https://raw.githubusercontent.com/uno-km/ameva/master/genesis.sh | bash
+
 # 🧬 Project AMEVA
 > **"Beyond the Cloud, Intelligence Survives on the Edge."**  
 > 클라우드라는 탯줄을 끊고, 하드웨어의 한계 위에서 스스로 생존하고 창조하는 독립형 자율 에이전트
