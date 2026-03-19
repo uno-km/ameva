@@ -30,7 +30,10 @@ pkg update && pkg upgrade -y
 pkg install x11-repo tur-repo -y
 pkg install git wget curl nano build-essential clang cmake ninja \
             sqlite libsqlite-dev postgresql openblas libandroid-support \
-            python termux-api android-tools code-server -y
+            python python-pip termux-api android-tools code-server -y
+pkg install python-numpy python-pandas python-scipy python-matplotlib -y
+pkg install libopenblas libandroid-support python-pillow -y
+
 echo -e "\e[1;33m[>] 시스템 기본 장비 장전 완료.\e[0m"
 
 # ==============================================================================
@@ -47,7 +50,10 @@ cd BitNet
 # 마소 권장 의존성 설치
 echo -e "\e[1;34m[>] 마소 공식 requirements.txt 및 허깅페이스 툴 설치...\e[0m"
 pip install --upgrade pip
-pip install -r requirements.txt
+
+echo -e "\e[1;34m[>] 나머지 가벼운 놈들만 PIP으로 마무리 (이미 있는 건 스킵됨)...\e[0m"
+pip install --upgrade pip
+pip install -r requirements.txt --prefer-binary
 pip install huggingface_hub[cli]  # 공식 다운로더
 
 # ==============================================================================
