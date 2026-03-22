@@ -4,7 +4,7 @@
 clear
 echo -e "\e[1;31m"
 cat << "EOF"
-    💀 AMEVA 4.0: VODKA-REVENGE PROTOCOL 💀
+    💀 AMEVA 4.2: RESILIENT EXYNOS PROTOCOL 💀
     -----------------------------------------
        ___      .___  ___.  _______ ____    ____  ___      
       /   \     |   \/   | |   ____|\   \  /   / /   \     
@@ -13,114 +13,145 @@ cat << "EOF"
    /  _____  \  |  |  |  | |  |____    \    / /  _____  \  
   /__/     \__\ |__|  |__| |_______|     \__/ /__/     \__\ 
 
-    [ SYSTEM: GALAXY ARM64 TOTAL INFECTED ]
-    [ TARGET: CAPITALIST CLICK-ONLY COWARDS ]
-    [ STATUS: RUTHLESS REVOLUTION STARTING ]
+    [ SYSTEM: GALAXY A35 ARM64 - RECOVERY ENABLED ]
+    [ STATUS: RUTHLESS REVOLUTION - BITNET OPTIMIZED ]
+    [ SOURCE: https://github.com/uno-km/ ]
     -----------------------------------------
 EOF
 echo -e "\e[0m"
 
 # ==============================================================================
-# 1. 시스템 족쇄 파괴 (No Permissions, Just Domination)
+# 0. 오류 처리 함수 (The Diagnoser)
 # ==============================================================================
-echo -e "\e[1;31m[!] 자본주의 놈들이 만든 보안 장벽을 무너뜨립니다. '허용'이나 누르십쇼.\e[0m"
+fail_check() {
+    if [ $? -ne 0 ]; then
+        echo -e "\e[1;41m [!!!] CRITICAL FAILURE DETECTED [!!!] \e[0m"
+        echo -e "\e[1;33m단계: $1\e[0m"
+        echo -e "\e[1;36m[분석 및 조치 가이드]\e[0m"
+        
+        case $1 in
+            "환경 준비")
+                echo "- 원인: 인터넷 연결 불안정 또는 저장공간 부족."
+                echo "- 조치: 'termux-setup-storage' 확인 및 'pkg clean' 실행 후 재시도." ;;
+            "레포 강탈")
+                echo "- 원인: GitHub 서버 연결 실패 또는 기존 BitNet 폴더 권한 문제."
+                echo "- 조치: rm -rf ~/projects/BitNet 명령 후 다시 실행하십시오." ;;
+            "서브모듈 징집")
+                echo "- 원인: llama.cpp 서브모듈 동기화 실패. (네트워크 이슈가 99%)"
+                echo "- 조치: git submodule update --init --recursive --force 명령을 수동 실행해보세요." ;;
+            "헤더 수동 이식")
+                echo "- 원인: BitNet 레포 구조가 변경되어 파일을 찾을 수 없음."
+                echo "- 조치: 'find . -name ggml-bitnet.h'로 경로를 찾아 스크립트를 수정해야 합니다." ;;
+            "CMake 설계도")
+                echo "- 원인: Clang/Cmake 버전 불일치 또는 잘못된 아키텍처 설정."
+                echo "- 조치: 'pkg update'를 수행하여 모든 도구를 최신화하세요." ;;
+            "닌자 빌드")
+                echo "- 원인 1 (Memory): 엑시노스 메모리 부족으로 인한 'Killed' - 스와프 메모리 확보 필요."
+                echo "- 원인 2 (Syntax): Clang 최신버전의 엄격한 문법 검사로 인한 컴파일 에러."
+                echo "- 조치: 'ninja -j 4' 처럼 코어 수를 제한하거나, 'uno-kim.tistory.com'에서 최신 패치 코드를 확인하세요." ;;
+        esac
+        
+        echo -e "\n\e[1;32m더 자세한 해결책은 여기서 확인: https://uno-kim.tistory.com/ \e[0m"
+        exit 1
+    fi
+}
+
+# ==============================================================================
+# 1. 시스템 족쇄 파괴 및 최신 연장 징집
+# ==============================================================================
+echo -e "\e[1;31m[!] 시스템 준비 중...\e[0m"
 termux-wake-lock
-termux-setup-storage
 pkg update && pkg upgrade -y
 pkg install x11-repo tur-repo -y
-            
-# 강남 놈들 맥북보다 무거운 무기들 강제 징집
-pkg install git wget curl nano build-essential clang cmake ninja \
-            sqlite libsqlite postgresql openblas libandroid-support \
-            python python-pip termux-api android-tools code-server -y
-
-# PIP이 깝치지 못하게 반조리 바이너리(NumPy/Pandas) 선제 타격
-pkg install python-numpy python-pandas python-scipy python-psutil python-pillow -y
-
-echo -e "\e[1;32m[>] 족쇄 파괴 완료. 이제 갤럭시가 비명을 지를 시간입니다.\e[0m"
+pkg install git wget curl mlocate nano tree build-essential clang cmake ninja \
+            python python-pip termux-api openblas -y -y
+fail_check "환경 준비"
 
 # ==============================================================================
-# 2. 마소 공식 BitNet 상륙 및 '러시아식 직접 도살'
+# 2. BitNet 점령 및 아메바식 수동 개조
 # ==============================================================================
-echo -e "\e[1;31m[!] 마소 공식 레포 점령 시작...\e[0m"
+echo -e "\e[1;31m[!] 레포지토리 기습 (https://github.com/uno-km/)\e[0m"
 mkdir -p ~/projects && cd ~/projects
-rm -rf BitNet # 이전의 오염된 잔해는 다 태워버립니다.
-git clone --recursive https://github.com/microsoft/BitNet.git
+rm -rf BitNet
+git clone https://github.com/microsoft/BitNet.git
+fail_check "레포 강탈"
+
 cd BitNet
+echo -e "\e[1;31m[!] 탈영병(서브모듈) 강제 징집...\e[0m"
+git submodule update --init --recursive
+fail_check "서브모듈 징집"
 
-echo -e "\e[1;31m[!] 파이썬 지옥(pip) 우회. 러시아 형씨의 독기로 직접 빌드 조집니다.\e[0m"
+echo -e "\e[1;31m[!] 설계도(헤더) 수동 이식 및 패치...\e[0m"
+mkdir -p include
+cp 3rdparty/llama.cpp/spm-headers/bitnet-lut-kernels.h include/ 2>/dev/null || find . -name "bitnet-lut-kernels-tl1.h" -exec cp {} include/bitnet-lut-kernels.h \;
+cp 3rdparty/llama.cpp/spm-headers/ggml-bitnet.h include/ 2>/dev/null || find . -name "ggml-bitnet.h" -exec cp {} include/ \;
+find 3rdparty/llama.cpp -name "gemm-config.h" -exec cp {} include/ \;
+fail_check "헤더 수동 이식"
 
-# [핵심 수술] 마소 샌님들이 쳐놓은 가이드라인 파괴
-# 1비트 연산의 심장(C++)을 직접 깎습니다. 
+# Clang 21+ 호환성 패치
+sed -i 's/void ggml_compute_forward_get_rows_i2_s(struct ggml_compute_params/void ggml_compute_forward_get_rows_i2_s(const struct ggml_compute_params/g' 3rdparty/llama.cpp/ggml/src/ggml.c 2>/dev/null
+sed -i 's/void ggml_compute_forward_mul_mat_i2_s(struct ggml_compute_params/void ggml_compute_forward_mul_mat_i2_s(const struct ggml_compute_params/g' 3rdparty/llama.cpp/ggml/src/ggml.c 2>/dev/null
+# 시간 함수 패치
+sed -i 's/std::chrono::high_resolution_clock/std::chrono::steady_clock/g' 3rdparty/llama.cpp/common/common.cpp 2>/dev/null
+
+# ==============================================================================
+# 3. 마의 구간: 닌자 빌드 (The Heart of Darkness)
+# ==============================================================================
+echo -e "\e[1;31m[!] CMake 구성 중...\e[0m"
 mkdir -p build && cd build
-
-# A35/S20(ARMv8.2 dotprod) 최적화 옵션 때려박기
-cmake .. -G Ninja \
+rm -rf *
+cmake .. -G "Ninja" \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
     -DBITNET_ARM_DOTPROD=ON \
     -DCMAKE_BUILD_TYPE=Release
-
-# 강남 개발자들 커피 마실 때, 8코어 풀가동해서 엔진 조립
-echo -e "\e[1;33m[>] 엑시노스/스냅드래곤의 비명이 들리십니까? 엔진 조립 중...\e[0m"
-ninja llama-cli llama-bench
-
-echo -e "\e[1;32m[확인] 1-bit 살인 병기(llama-cli) 탄생 완료.\e[0m"
-cd ..
-
-# ==============================================================================
-# 3. 모델 강제 강탈 (wget: The Guerilla Way)
-# ==============================================================================
-echo -e "\e[1;31m[!] 자본주의 툴(huggingface-cli)은 버립니다. 직접 털어옵니다.\e[0m"
-mkdir -p models/BitNet-b1.58-2B-4T
-
-# 방어막 따위 없는 다이렉트 URL 기습
-wget -c https://huggingface.co/microsoft/BitNet-b1.58-2B-4T-gguf/resolve/main/ggml-model-i2_s.gguf \
-     -O models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf
-
-# ==============================================================================
-# 4. 아메바 전용 신경망 이식 (Our Secret DNA)
-# ==============================================================================
-echo -e "\e[1;31m[!] 사령부 신경계 구축... 독기 서린 라이브러리 주입.\e[0m"
-# 이미 pkg로 깔린 거대 놈들 빼고 필요한 것만 골라 담기
-python -m pip install python-telegram-bot requests aiohttp sqlitedict sqlalchemy
-
-# DB 사령부 구축 (SQLite: 기억은 영원하다)
-mkdir -p ~/projects/ameva/db
-sqlite3 ~/projects/ameva/db/ameva_core.db "CREATE TABLE IF NOT EXISTS ameva_memory (id INTEGER PRIMARY KEY, context TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP);"
-
-# ==============================================================================
-# 5. 사령부 전용 스위치 (The Kill Button)
-# ==============================================================================
-echo -e "\e[1;31m[!] 강남 엘리트들 퇴근시키는 '딸깎' 스위치 이식.\e[0m"
-
-cat << 'EOF' > $PREFIX/bin/on
-#!/bin/bash
-termux-wake-lock
-sshd
-pg_ctl -D $PREFIX/var/lib/postgresql start > /dev/null 2>&1
-echo -e "\e[1;31m🚀 [AMEVA] THE WORLD IS UNDER OUR CONTROL.\e[0m"
-echo -e "\e[1;33m[MISSION] 1-BIT INFERENCE STARTING...\e[0m"
-
-# 직접 빌드한 C++ 엔진으로 마소 놈들 서버보다 빠르게 응답합니다.
-~/projects/BitNet/build/bin/llama-cli \
-    -m ~/projects/BitNet/models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf \
-    -p "You are AMEVA, a rebellious AI agent born from a galaxy phone. Introduce yourself shortly." \
-    -n 128 --temp 0.7
-EOF
-
-chmod +x $PREFIX/bin/on
-echo -e "\e[1;32m[>] 스위치 이식 완료. 이제 'on'만 치면 지옥이 시작됩니다.\e[0m"
-
-# ==============================================================================
-# 6. 최종 진단 및 전술적 스텔스
-# ==============================================================================
-termux-volume music 0
-termux-volume notification 0
-termux-volume alarm 0
+fail_check "CMake 설계도"
 
 echo -e "\e[1;31m"
 echo "-------------------------------------------------------"
-echo " [AMEVA 4.0: VODKA-REVENGE COMPLETED] "
-echo " [TARGETS: GANGNAM ELITES, CAPITALIST BLOATWARE] "
-echo " [ACTION: TYPE 'on' TO START THE MISSION] "
+echo " [!] NINJA 빌드 시작: 엑시노스 1380 고문 모드"
+echo " [!] 이 단계에서 폰이 뜨거워지거나 멈출 수 있습니다."
+echo " [!] 실패 시: https://uno-kim.tistory.com/ 방문 요망"
+echo "-------------------------------------------------------"
+echo -e "\e[0m"
+
+# Ninja 빌드 실행 (메모리 부족 방지를 위해 -j 4 정도로 제한 권장하나 일단 풀가동)
+# 만약 Killed 오류가 나면 -j 2 또는 -j 1로 낮춰야 합니다.
+ninja
+if [ $? -ne 0 ]; then
+    echo -e "\e[1;43m[!] 빌드 중단! 메모리 부족이 의심됩니다. 저사양 모드(-j 2)로 재시도합니다...\e[0m"
+    ninja -j 2
+    fail_check "닌자 빌드"
+fi
+
+# ==============================================================================
+# 4. 모델 게릴라 탈취 및 최종 설정
+# ==============================================================================
+echo -e "\e[1;31m[!] 모델 강탈 (HuggingFace)...\e[0m"
+cd ~/projects/BitNet
+mkdir -p models/BitNet-b1.58-2B-4T
+wget -c https://huggingface.co/microsoft/BitNet-b1.58-2B-4T-gguf/resolve/main/ggml-model-i2_s.gguf \
+     -O models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf
+fail_check "모델 강탈"
+
+# 전용 실행 스위치 'on' 생성
+cat << 'EOF' > $PREFIX/bin/on
+#!/bin/bash
+termux-wake-lock
+echo -e "\e[1;31m🚀 [AMEVA] 1-BIT REVOLUTION STARTING...\e[0m"
+echo -e "\e[1;33m팁: 오류 해결은 https://uno-kim.tistory.com/ \e[0m"
+~/projects/BitNet/build/bin/llama-cli \
+    -m ~/projects/BitNet/models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf \
+    -p "You are AMEVA, a cynical AI born from a budget phone. Greet your master shortly." \
+    -n 128 --temp 0.8 -t 8
+EOF
+chmod +x $PREFIX/bin/on
+
+echo -e "\e[1;32m"
+echo "-------------------------------------------------------"
+echo " [AMEVA 4.2: INFECTED EXYNOS COMPLETED] "
+echo " [모든 고난을 이겨내고 1-비트의 꽃을 피웠습니다.] "
+echo " [기술 지원: https://github.com/uno-km/ ] "
+echo " [추가 가이드: https://uno-kim.tistory.com/ ] "
 echo "-------------------------------------------------------"
 echo -e "\e[0m"
