@@ -55,38 +55,116 @@ pkg install git wget curl nano build-essential clang cmake ninja \
 fail_check "시스템 징집"
 
 # ==============================================================================
-# 2. BitNet.cpp 사령부 건설 (The Core Engine)
+# 2. BitNet.cpp 사령부 건설 (The Core Engine, i2_s 전용)
 # ==============================================================================
-echo -e "\e[1;31m[!] BitNet 엔진 탈취 (https://github.com/uno-km/)\e[0m"
+echo -e "\e[1;31m[!] BitNet 엔진 탈취 (https://github.com/microsoft/BitNet)\e[0m"
+
+# 작업 디렉터리 초기화
 mkdir -p ~/projects && cd ~/projects
 rm -rf BitNet
+
+# 메인 레포 + 서브모듈
 git clone https://github.com/microsoft/BitNet.git
 fail_check "BitNet 복제"
 
 cd BitNet
 git submodule update --init --recursive
+fail_check "서브모듈 초기화"
 
-# 헤더 수동 이식 (Surgery)
+# ------------------------------------------------------------------------------
+# i2_s 전용 헤더 수동 이식 (Surgery for i2_s)
+#  - spm-headers 심볼릭 링크에 의존하지 않고
+#    GitHub 원본 + 수동 gemm-config로 완전 재구성
+# ------------------------------------------------------------------------------
+
 mkdir -p include
-cp 3rdparty/llama.cpp/spm-headers/bitnet-lut-kernels.h include/ 2>/dev/null || find . -name "bitnet-lut-kernels-tl1.h" -exec cp {} include/bitnet-lut-kernels.h \;
-cp 3rdparty/llama.cpp/spm-headers/ggml-bitnet.h include/ 2>/dev/null || find . -name "ggml-bitnet.h" -exec cp {} include/ \;
-find 3rdparty/llama.cpp -name "gemm-config.h" -exec cp {} include/ \;
 
-# Clang 21+ 문법 교정
-sed -i 's/void ggml_compute_forward_get_rows_i2_s(struct ggml_compute_params/void ggml_compute_forward_get_rows_i2_s(const struct ggml_compute_params/g' 3rdparty/llama.cpp/ggml/src/ggml.c 2>/dev/null
-sed -i 's/void ggml_compute_forward_mul_mat_i2_s(struct ggml_compute_params/void ggml_compute_forward_mul_mat_i2_s(const struct ggml_compute_params/g' 3rdparty/llama.cpp/ggml/src/ggml.c 2>/dev/null
+# 1) ggml-bitnet.h 복구 (공식 원본에서 직접 가져오기)
+curl -L https://raw.githubusercontent.com/microsoft/BitNet/main/include/ggml-bitnet.h \
+     -o include/ggml-bitnet.h
+fail_check "ggml-bitnet.h 복구"
 
-# 마의 Ninja 빌드 구간
-echo -e "\e[1;31m[!] 마소 공식 엔진 닌자 빌드 가동 (Exynos High-Heat Mode)...\e[0m"
+# 2) bitnet-lut-kernels.h 복구 (i2_s 템플릿 역할)
+curl -L https://raw.githubusercontent.com/microsoft/BitNet/main/include/bitnet-lut-kernels.h \
+     -o include/bitnet-lut-kernels.h
+fail_check "bitnet-lut-kernels.h 복구"
+
+# 3) gemm-config.h 수동 구성 (i2_s + AArch64용 커널 파라미터)
+cat > include/gemm-config.h << 'EOF'
+#ifndef GEMM_CONFIG_H
+#define GEMM_CONFIG_H
+
+// GEMM tile sizes (실측/튜닝값에 따라 조정 가능)
+#define BM 160
+#define BK 64
+#define wm 32
+#define wn 32
+
+// BitNet MAD kernel에서 사용하는 병렬 처리 크기
+#define PARALLEL_SIZE 4
+
+// AArch64용 ggml-aarch64.c 커널 블록 사이즈
+#define ROW_BLOCK_SIZE 32
+#define COL_BLOCK_SIZE 32
+
+#endif
+EOF
+
+# 필수 헤더 3종 존재 여부 확인 (디버깅용)
+ls -l include/bitnet-lut-kernels.h include/ggml-bitnet.h include/gemm-config.h || {
+    echo -e "\e[1;31m[!] BitNet 필수 헤더 누락 - 빌드 불가\e[0m"
+    exit 1
+}
+
+# ------------------------------------------------------------------------------
+# Clang 21+ / Termux 전용 패치
+# ------------------------------------------------------------------------------
+
+# Clang 21에서 const qualifier 관련 시그니처 경고/에러 방지
+sed -i 's/void ggml_compute_forward_get_rows_i2_s(struct ggml_compute_params/void ggml_compute_forward_get_rows_i2_s(const struct ggml_compute_params/g' \
+    3rdparty/llama.cpp/ggml/src/ggml.c 2>/dev/null
+
+sed -i 's/void ggml_compute_forward_mul_mat_i2_s(struct ggml_compute_params/void ggml_compute_forward_mul_mat_i2_s(const struct ggml_compute_params/g' \
+    3rdparty/llama.cpp/ggml/src/ggml.c 2>/dev/null
+
+# Termux/Android에서 high_resolution_clock 이슈 회피
+sed -i 's/std::chrono::high_resolution_clock/std::chrono::steady_clock/g' \
+    3rdparty/llama.cpp/common/common.cpp 2>/dev/null
+
+sed -i 's/std::chrono::high_resolution_clock/std::chrono::steady_clock/g' \
+    3rdparty/llama.cpp/common/log.cpp 2>/dev/null
+
+# ------------------------------------------------------------------------------
+# Ninja 빌드 (i2_s 전용 BitNet 엔진 컴파일)
+# ------------------------------------------------------------------------------
+
+echo -e "\e[1;31m[!] 마소 BitNet i2_s 엔진 닌자 빌드 가동 (Exynos High-Heat Mode)...\e[0m"
+
 mkdir -p build && cd build
-cmake .. -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DBITNET_ARM_DOTPROD=ON -DCMAKE_BUILD_TYPE=Release
+rm -rf *
+
+cmake .. -G "Ninja" \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBITNET_ARM_DOTPROD=ON
+fail_check "CMake 구성"
+
+# 멀티코어 빌드, 실패 시 단일 스레드 재시도
 ninja || ninja -j 1
 fail_check "닌자 빌드"
 
-# 모델 다운로드
+# ------------------------------------------------------------------------------
+# BitNet-b1.58-2B-4T i2_s 모델 다운로드
+# ------------------------------------------------------------------------------
+
 cd ~/projects/BitNet
 mkdir -p models/BitNet-b1.58-2B-4T
-wget -c https://huggingface.co/microsoft/BitNet-b1.58-2B-4T-gguf/resolve/main/ggml-model-i2_s.gguf -O models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf
+
+wget -c \
+  https://huggingface.co/microsoft/BitNet-b1.58-2B-4T-gguf/resolve/main/ggml-model-i2_s.gguf \
+  -O models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf
+fail_check "BitNet-b1.58-2B-4T i2_s 모델 다운로드"
 
 # ==============================================================================
 # 3. AMEVA 신경망 DNA 및 DB 이식
